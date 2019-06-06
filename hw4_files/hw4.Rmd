@@ -1,0 +1,60 @@
+---HW4"
+author: "Amber Burnett"
+date: "6/1/2019"
+output: html_document
+---
+
+```{r chunk1, echo=TRUE}
+#libraries we will use in this rscript.
+library("tidyverse")
+library("rvest")
+library("humaniformat")
+library("reprex")
+library("ggplot2")
+```
+
+```{r chunk2, echo=TRUE}
+#Question 1
+#Viewed the source and scrape the page. We scrape the cast table from the website.
+harrypotter=('http://www.imdb.com/title/tt1201607/fullcredits?ref_=tt_ql_1')
+#Created a function to scrape and parse data from website.
+html_scraper <-function(url,elem) {
+  read_html(url)%>% html_nodes("table")%>%.[[elem]] %>% html_table ->out
+  return(out)
+}
+
+html_scraper(harrypotter,3)->cast
+head(cast,10)
+cast$X1<-NULL
+cast$X3<-NULL
+head(cast,10)
+cast<- cast[-1,]
+head(cast,10)
+substituter<-function(df){
+  gsub("[\r\n]","",df)
+}
+sapply(cast, function(x){gsub("[\r\n]","",x)})->cast
+cast<-as.data.frame(cast)
+head(cast,10)
+colnames(cast)<-c("Actor","Character")
+first<-first_name(cast$Actor)
+middle<-middle_name(cast$Actor)
+middle[is.na(middle)]<-""
+last<-last_name(cast$Actor)
+firstName<-paste(first,middle)
+cleancast<-data.frame("FirstName"=firstName,"Surname"=last,"Character"=cast$Character)
+head(cleancast)
+```
+
+
+```{r chunk3, echo=TRUE}
+#Viewed the source and scrape the page. We scrape the table from the website and find the names and find the relative tables are 6 and 8.
+bball <- ('http://www.espn.com/nba/team/stats/_/name/sa/san-antonio-spurs')
+spurs<-data.frame("player"=html_scraper(bball,6),"stats"=html_scraper(bball,8))
+head(spurs)
+spurs%>%separate(Name, into=c("player","position"),sep=-2)->sep.spurs
+colnames(sep.spurs)
+#After viewing the colnames, we build our colored barplot using ggplot2 showing the Field Goal Percentages Per Game for each person by position.
+ggplot(sep.spurs,aes(,x=player,y=stats.FG.,color=position)) + geom_bar(stat="identity") + xlab("Player Names") + ylab("Field Goal Percentage") + ggtitle("The Spurs Players' Field Goal Percentages") + theme(axis.text.x = element_text(angle = 60, hjust = 1))
+```
+
